@@ -37,6 +37,10 @@ GNB 등에 게시판이 링크되어 있다면 사용자는 해당 메뉴를 눌
 
 ### 기본 세팅법
 
+```bash
+npm install --save vue-route-key
+```
+
 main.js
 ```javascript
 import Vue from 'vue';
