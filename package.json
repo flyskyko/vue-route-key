@@ -18,7 +18,6 @@
   "author": "flyskyko",
   "license": "MIT",
   "main": "dist/VueRouteKey.common.js",
-  "private": true,
   "scripts": {
     "build": "vue-cli-service build --target lib --name VueRouteKey ./src/index.js --mode=production"
   },
