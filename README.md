@@ -1,45 +1,50 @@
 # vue-route-key
 
-> Param과 query가 변경되면 component life cycle을 다시 시작합니다.  
-> 동일한 주소를 강제로 갱신할 수 있습니다.
+> `vue-route-key` is a simple plugin for restart component when change route params and query. 
 
-## 왜 만들었는가?
+## Features
 
-vue-router는 param이나 query가 변경되어도 새로운 라우팅이 동일한 component라면 component를 다시 생성하지 않고 단지 `beforeRouteUpdate` 훅을 호출해줄 뿐입니다.
-Component 재활용이 좋을 수도 있지만 때로는 문제를 심플하게 만드는 것이 나을 수도 있습니다.
+- Restart component when change route params and query
+- Force restart current component
 
-[Watch를 사용해서 필요한 파라미터를 전부 watch하는 방법](https://forum.vuejs.org/t/rerendering-component-on-route-param-change-recalling-created-hooks/9536) 을 보았습니다.
-정말 이 방법 뿐인가? 
+## Why?
 
-이후 `<router-view :key="$route.fullPath"/>` 이렇게 `<route-view>`에 `key` 속성을 `$route.fullPath`로 주는 방법을 찾았습니다. 주소가 어떻게든 변경되면 component는 갱신되기 때문에 나름 괜찮은 방법이었습니다.
-하지만 중첩된 라우팅에서 첫번째 component는 갱신하고 싶지 않고 중첩된 component만을 갱신하고 싶을 때는 방법이 없습니다.
+First, Let's assume that you have a `/profile/:id` and component call an api from `created()`.
+If you navigate from `/profile/1` to `/profile/2`, `vue-router` does not call `created()`.
+Because it reuses a current component instead of restart and calls `beforeRouteUpdate`.
 
-그리고 현재 화면을 다시 갱신하는 것은 아무리 찾아보아도 마땅한 해결방법이 없었습니다.
-GNB 등에 게시판이 링크되어 있다면 사용자는 해당 메뉴를 눌렀을 때 당연히 게시판 목록이 갱신될 것을 예상할 것입니다.
+I found some solutions:
+1. [Use a watch](https://forum.vuejs.org/t/rerendering-component-on-route-param-change-recalling-created-hooks/9536): Is this the best way?
+2. `<router-view :key="$route.fullPath"/>`: Very simple and effective. But if you have nested routing, all components are restart. I want to restart a nested component only.
 
-그래서 답답한 제가 직접 만들었습니다.
+Second, If there is a link to the forum on the nav, people expect that page showing new contents when they click the link.
+But nothing happens when they click the link. Because `vue-router` blocks navigate to same location.
 
-## 어떻게 동작하는가?
+That is why I made this plugin.
 
-이 플러그인은 크게 세 개의 부분으로 이루어져 있습니다.
+## How it works?
 
-- vue-router 재정의: vue-router의 `push`, `relace`를 재정의하여 강제 갱신을 사용한다면 duplicated 오류를 무시하게 합니다.
-- router hook: 핵심이 되는 부분이라 볼 수 있습니다. 현재 라우팅과 매칭된 component들로부터 component를 갱신하고 싶은 param, query 정보를 얻은 후 `<router-view>`에서 사용할 수 있는 고유한 키값을 생성합니다.
-- mixin: hook에서 새성한 고유한 키값을 모든 component에서 사용할 수 있도록 `$routeKey`라는 이름으로 주입해줍니다. 강제 갱신을 위한 처리도 겸하고 있습니다.
+This plugin consists of three parts.
 
-이 플러그인이 만들어준 `$routeKey`를 `<router-view>`에 다음과 같이 `key` 속성으로 사용함으로써 component는 갱신되게 됩니다.
+- Override `vue-router`: Override the `push` and `relace` of `vue-router` to ignore duplicated error when using force update.
+- Router hook: This is the core part. It collects params and query information from components matched with current routing, *generate a unique key value* that can be used in `<router-view>`.
+- Mixin: This mixin inject the unique key value to component with the name `$routeKey`. It also serves force update feature.
+
+The `$routeKey` used as `:key` attribute's value in `<route-view>`. The component restart by changes of `$routeKey`.
 
 ```vue
 <router-view :key="$routeKey[0]" />
 ```
 
-## 사용 방법
+## Usage
 
-### 기본 세팅법
+### Install
 
 ```bash
 npm install --save vue-route-key
 ```
+
+### Setup
 
 main.js
 ```javascript
@@ -49,25 +54,25 @@ import VueRouteKey from 'vue-route-key';
 
 const router = new VueRouter(/* ... */);
 
-Vue.use(VueRouteKey, {router}); // router 생성 후 플러그인을 install합니다.
+Vue.use(VueRouteKey, {router}); // Install plugin after create a router.
 ```
 
 App.vue
 ```vue
 <router-view :key="$routerKey[0]" /> 
 <!-- 
-    <router-view>에 :key="$routerKey[0]"를 추가합니다.
-    중첩된 라우팅에 따라 index를 조정해 줍니다.
+    append the :key="$routerKey[0]" in <router-view>.
+    Adjust the index according to the nested level.
 -->
 ```
 
-### Params와 query에 따라 갱신하는 방법
+### Restart component by changes of params and query.
 Component.vue
 ```vue
 <script>
 export default {
     // ...
-    routeKey: [ // 기입된 param과 query에 변경이 있으면 component가 새로 초기화됩니다.
+    routeKey: [ // Type params and query you want to restart component if they changed.
         'params.paramName',
         'params.otherParam',
         'query.queryName',
@@ -78,9 +83,9 @@ export default {
 </script>
 ```
 
-### 현재 화면 강제 갱신하는 방법
+### Force update
 
-`params._forceUpdate`를 `true`로 설정하여 현재 화면을 강제로 업데이트 가능합니다.
+You can force update by `params._forceUpdate` set `true`.
 
 ```javascript
 this.$router.push({
