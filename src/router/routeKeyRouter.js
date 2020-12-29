@@ -3,7 +3,8 @@ import {incrForceRouteKey} from '../mixins/routeKeyMixin';
 
 
 function forceUpdateAbort(location, err, onComplete, onAbort) {
-    if (location.params?._forceUpdate && (err.name === 'NavigationDuplicated' || err.type === 4/* duplicated */)) {
+    const duplicatedType = VueRouter.NavigationFailureType && VueRouter.NavigationFailureType.duplicated || -1;
+    if (location.params?._forceUpdate && (err.name === 'NavigationDuplicated' || err.type === duplicatedType)) {
         incrForceRouteKey();
 
         if (onComplete) {

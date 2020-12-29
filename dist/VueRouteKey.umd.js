@@ -4855,6 +4855,7 @@ var es_string_replace = __webpack_require__("5319");
 
 // EXTERNAL MODULE: external "vue-router"
 var external_vue_router_ = __webpack_require__("6389");
+var external_vue_router_default = /*#__PURE__*/__webpack_require__.n(external_vue_router_);
 
 // CONCATENATED MODULE: ./src/router/routeKeyRouter.js
 
@@ -4866,9 +4867,9 @@ var external_vue_router_ = __webpack_require__("6389");
 function forceUpdateAbort(location, err, onComplete, onAbort) {
   var _location$params;
 
-  if (((_location$params = location.params) === null || _location$params === void 0 ? void 0 : _location$params._forceUpdate) && (err.name === 'NavigationDuplicated' || err.type === 4
-  /* duplicated */
-  )) {
+  var duplicatedType = external_vue_router_default.a.NavigationFailureType && external_vue_router_default.a.NavigationFailureType.duplicated || -1;
+
+  if (((_location$params = location.params) === null || _location$params === void 0 ? void 0 : _location$params._forceUpdate) && (err.name === 'NavigationDuplicated' || err.type === duplicatedType)) {
     incrForceRouteKey();
 
     if (onComplete) {
