@@ -2,9 +2,13 @@ import VueRouter from 'vue-router';
 import {incrForceRouteKey} from '../mixins/routeKeyMixin';
 
 
-function forceUpdateAbort(location, err, onComplete, onAbort) {
+function forceUpdateAbort(location, err, onComplete, onAbort, canIncrKey) {
+    if (!canIncrKey) {
+        canIncrKey = () => true;
+    }
+
     const duplicatedType = VueRouter.NavigationFailureType && VueRouter.NavigationFailureType.duplicated || -1;
-    if (location.params?._forceUpdate && (err.name === 'NavigationDuplicated' || err.type === duplicatedType)) {
+    if (location.params?._forceUpdate && (err.name === 'NavigationDuplicated' || err.type === duplicatedType) && canIncrKey()) {
         incrForceRouteKey();
 
         if (onComplete) {
@@ -23,13 +27,13 @@ function forceUpdateComplete(location, onComplete) {
     }
 }
 
-export function extendVueRouter({router}) {
+export function extendVueRouter({router, canIncrKey}) {
     const oldPush = router.push;
     router.push = function (location, onComplete, onAbort) {
         return oldPush.call(this, location, () => {
             forceUpdateComplete(location, onComplete);
         }, err => {
-            forceUpdateAbort(location, err, onComplete, onAbort);
+            forceUpdateAbort(location, err, onComplete, onAbort, canIncrKey);
         });
     }
 
@@ -38,7 +42,7 @@ export function extendVueRouter({router}) {
         return oldReplace.call(this, location, () => {
             forceUpdateComplete(location, onComplete);
         }, err => {
-            forceUpdateAbort(location, err, onComplete, onAbort);
+            forceUpdateAbort(location, err, onComplete, onAbort, canIncrKey);
         });
     }
 }

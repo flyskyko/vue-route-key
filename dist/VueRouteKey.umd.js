@@ -4864,12 +4864,18 @@ var external_vue_router_default = /*#__PURE__*/__webpack_require__.n(external_vu
 
 
 
-function forceUpdateAbort(location, err, onComplete, onAbort) {
+function forceUpdateAbort(location, err, onComplete, onAbort, canIncrKey) {
   var _location$params;
+
+  if (!canIncrKey) {
+    canIncrKey = function canIncrKey() {
+      return true;
+    };
+  }
 
   var duplicatedType = external_vue_router_default.a.NavigationFailureType && external_vue_router_default.a.NavigationFailureType.duplicated || -1;
 
-  if (((_location$params = location.params) === null || _location$params === void 0 ? void 0 : _location$params._forceUpdate) && (err.name === 'NavigationDuplicated' || err.type === duplicatedType)) {
+  if (((_location$params = location.params) === null || _location$params === void 0 ? void 0 : _location$params._forceUpdate) && (err.name === 'NavigationDuplicated' || err.type === duplicatedType) && canIncrKey()) {
     incrForceRouteKey();
 
     if (onComplete) {
@@ -4889,14 +4895,15 @@ function forceUpdateComplete(location, onComplete) {
 }
 
 function extendVueRouter(_ref) {
-  var router = _ref.router;
+  var router = _ref.router,
+      canIncrKey = _ref.canIncrKey;
   var oldPush = router.push;
 
   router.push = function (location, onComplete, onAbort) {
     return oldPush.call(this, location, function () {
       forceUpdateComplete(location, onComplete);
     }, function (err) {
-      forceUpdateAbort(location, err, onComplete, onAbort);
+      forceUpdateAbort(location, err, onComplete, onAbort, canIncrKey);
     });
   };
 
@@ -4906,7 +4913,7 @@ function extendVueRouter(_ref) {
     return oldReplace.call(this, location, function () {
       forceUpdateComplete(location, onComplete);
     }, function (err) {
-      forceUpdateAbort(location, err, onComplete, onAbort);
+      forceUpdateAbort(location, err, onComplete, onAbort, canIncrKey);
     });
   };
 }
@@ -4921,13 +4928,15 @@ var src_plugin = {
    * @param {Vue} Vue
    * @param {object} options
    * @param {VueRouter} options.router - VueRouter 인스턴스
+   * @param {VueRouter} options.canIncrKey - 키 값을 증가해도 되는지 여부를 판단하는 함수
    */
   install: function install(Vue, options) {
     Vue.util.defineReactive(reactiveRouteKeyInfo, 'routeKey', []);
     options.router.beforeEach(routeKeyHook);
     Vue.mixin(routeKeyMixin);
     extendVueRouter({
-      router: options.router
+      router: options.router,
+      canIncrKey: options.canIncrKey
     });
   }
 };

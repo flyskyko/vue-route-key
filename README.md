@@ -54,7 +54,12 @@ import VueRouteKey from 'vue-route-key';
 
 const router = new VueRouter(/* ... */);
 
-Vue.use(VueRouteKey, {router}); // Install plugin after create a router.
+Vue.use(VueRouteKey, {
+    router, // Install plugin after create a router.
+    canIncrKey() { // (optional) determine force update
+        return true;
+    }
+}); 
 ```
 
 App.vue
@@ -99,6 +104,8 @@ this.$router.push({
 ```vue
 <router-link :to="{name: 'page', params: {_forceUpdate: true}}">link</router-link>
 ```
+
+`NOTE` If `canIncrKey()` returns false, force update will be canceled.
 
 ## DEMO
 
