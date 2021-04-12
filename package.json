@@ -1,6 +1,6 @@
 {
   "name": "vue-route-key",
-  "version": "1.0.2",
+  "version": "1.1.0",
   "description": "Restart component when change route params and query and force restart component.",
   "keywords": [
     "vue",
