@@ -56,7 +56,7 @@ const router = new VueRouter(/* ... */);
 
 Vue.use(VueRouteKey, {
     router, // Install plugin after create a router.
-    canIncrKey() { // (optional) determine force update
+    canIncrKey(depth = 0) { // (optional) determine force update
         return true;
     }
 }); 
@@ -90,19 +90,20 @@ export default {
 
 ### Force update
 
-You can force update by `params._forceUpdate` set `true`.
+You can force update by `params._forceUpdateIndex` sets depth of nested route-view.
 
 ```javascript
 this.$router.push({
     name: 'page', 
     params: {
-        _forceUpdate: true
+        _forceUpdate: true, // Deprecated
+        _forceUpdateDepth: 0,
     }
 });
 ```
 
 ```vue
-<router-link :to="{name: 'page', params: {_forceUpdate: true}}">link</router-link>
+<router-link :to="{name: 'page', params: {_forceUpdateDepth: 0}}">link</router-link>
 ```
 
 `NOTE` If `canIncrKey()` returns false, force update will be canceled.

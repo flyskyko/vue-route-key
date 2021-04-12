@@ -26,7 +26,12 @@ export default (to, from, next) => {
     });
 
     Promise.all(promises).then(() => {
-        if (to.params._forceUpdate) {
+        if (to.params._forceUpdateIndex !== undefined) {
+            incrForceRouteKey(true, to.params._forceUpdateIndex);
+        }
+
+        // backward compatibility
+        else if (to.params._forceUpdate) {
             incrForceRouteKey(true);
         }
         next();

@@ -4767,26 +4767,40 @@ var es_array_map = __webpack_require__("d81d");
 
 
 
-
-
-var forceRouteKey = 0;
+var forceRouteKey = [];
 var reactiveRouteKeyInfo = {};
 function setRouteKey(depth, key) {
-  reactiveRouteKeyInfo.routeKey[depth] = "".concat(forceRouteKey, "_").concat(key);
+  if (forceRouteKey[depth] === undefined) {
+    forceRouteKey[depth] = 0;
+  }
+
+  reactiveRouteKeyInfo.routeKey[depth] = "".concat(forceRouteKey[depth], "_").concat(key);
 }
 function incrForceRouteKey() {
   var silent = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
-  forceRouteKey++;
+  var depth = arguments.length > 1 ? arguments[1] : undefined;
+
+  // backward compatibility
+  if (depth === undefined) {
+    for (var i = 0; i < reactiveRouteKeyInfo.routeKey.length; i++) {
+      forceRouteKey[i] = forceRouteKey[i] === undefined ? 0 : forceRouteKey[i] + 1;
+    }
+  } else {
+    forceRouteKey[depth] = forceRouteKey[depth] === undefined ? 0 : forceRouteKey[depth] + 1;
+  }
 
   if (silent) {
-    reactiveRouteKeyInfo.routeKey.forEach(function (key, index) {
-      var forceKeyRemoved = getForceKeyRemoved(key);
-      reactiveRouteKeyInfo.routeKey[index] = "".concat(forceRouteKey, "_").concat(forceKeyRemoved);
-    });
+    var key = reactiveRouteKeyInfo.routeKey[depth];
+    var forceKeyRemoved = getForceKeyRemoved(key);
+    reactiveRouteKeyInfo.routeKey[depth] = "".concat(forceRouteKey[depth], "_").concat(forceKeyRemoved);
   } else {
-    reactiveRouteKeyInfo.routeKey = reactiveRouteKeyInfo.routeKey.map(function (key) {
+    reactiveRouteKeyInfo.routeKey = reactiveRouteKeyInfo.routeKey.map(function (key, index) {
+      if (depth !== index) {
+        return key;
+      }
+
       var forceKeyRemoved = getForceKeyRemoved(key);
-      return "".concat(forceRouteKey, "_").concat(forceKeyRemoved);
+      return "".concat(forceRouteKey[index], "_").concat(forceKeyRemoved);
     });
   }
 }
@@ -4840,9 +4854,12 @@ function getForceKeyRemoved(key) {
     promises.push(promise);
   });
   Promise.all(promises).then(function () {
-    if (to.params._forceUpdate) {
-      incrForceRouteKey(true);
-    }
+    if (to.params._forceUpdateIndex !== undefined) {
+      incrForceRouteKey(true, to.params._forceUpdateIndex);
+    } // backward compatibility
+    else if (to.params._forceUpdate) {
+        incrForceRouteKey(true);
+      }
 
     next();
   });
@@ -4865,7 +4882,7 @@ var external_vue_router_default = /*#__PURE__*/__webpack_require__.n(external_vu
 
 
 function forceUpdateAbort(location, err, onComplete, onAbort, canIncrKey) {
-  var _location$params;
+  var _location$params, _location$params2;
 
   if (!canIncrKey) {
     canIncrKey = function canIncrKey() {
@@ -4874,9 +4891,15 @@ function forceUpdateAbort(location, err, onComplete, onAbort, canIncrKey) {
   }
 
   var duplicatedType = external_vue_router_default.a.NavigationFailureType && external_vue_router_default.a.NavigationFailureType.duplicated || -1;
+  var isIncr = ((_location$params = location.params) === null || _location$params === void 0 ? void 0 : _location$params._forceUpdateIndex) !== undefined && (err.name === 'NavigationDuplicated' || err.type === duplicatedType) && canIncrKey(location.params._forceUpdateIndex);
+  var isBackwardCompatibilityIncr = ((_location$params2 = location.params) === null || _location$params2 === void 0 ? void 0 : _location$params2._forceUpdate) && (err.name === 'NavigationDuplicated' || err.type === duplicatedType) && canIncrKey();
 
-  if (((_location$params = location.params) === null || _location$params === void 0 ? void 0 : _location$params._forceUpdate) && (err.name === 'NavigationDuplicated' || err.type === duplicatedType) && canIncrKey()) {
-    incrForceRouteKey();
+  if (isIncr || isBackwardCompatibilityIncr) {
+    if (isIncr) {
+      incrForceRouteKey(false, location.params._forceUpdateIndex);
+    } else {
+      incrForceRouteKey();
+    }
 
     if (onComplete) {
       onComplete();

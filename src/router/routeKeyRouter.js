@@ -8,8 +8,14 @@ function forceUpdateAbort(location, err, onComplete, onAbort, canIncrKey) {
     }
 
     const duplicatedType = VueRouter.NavigationFailureType && VueRouter.NavigationFailureType.duplicated || -1;
-    if (location.params?._forceUpdate && (err.name === 'NavigationDuplicated' || err.type === duplicatedType) && canIncrKey()) {
-        incrForceRouteKey();
+    const isIncr = location.params?._forceUpdateIndex !== undefined && (err.name === 'NavigationDuplicated' || err.type === duplicatedType) && canIncrKey(location.params._forceUpdateIndex);
+    const isBackwardCompatibilityIncr = location.params?._forceUpdate && (err.name === 'NavigationDuplicated' || err.type === duplicatedType) && canIncrKey();
+    if (isIncr || isBackwardCompatibilityIncr) {
+        if (isIncr) {
+            incrForceRouteKey(false, location.params._forceUpdateIndex);
+        } else {
+            incrForceRouteKey();
+        }
 
         if (onComplete) {
             onComplete();
