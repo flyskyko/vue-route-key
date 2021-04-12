@@ -4758,6 +4758,8 @@ var es_array_map = __webpack_require__("d81d");
 
 
 
+
+
 var forceRouteKey = [];
 var reactiveRouteKeyInfo = {};
 function setRouteKey(depth, key) {
@@ -4781,15 +4783,12 @@ function incrForceRouteKey() {
   }
 
   if (silent) {
-    var key = reactiveRouteKeyInfo.routeKey[depth];
-    var forceKeyRemoved = getForceKeyRemoved(key);
-    reactiveRouteKeyInfo.routeKey[depth] = "".concat(forceRouteKey[depth], "_").concat(forceKeyRemoved);
+    reactiveRouteKeyInfo.routeKey.forEach(function (key, index) {
+      var forceKeyRemoved = getForceKeyRemoved(key);
+      reactiveRouteKeyInfo.routeKey[index] = "".concat(forceRouteKey[index], "_").concat(forceKeyRemoved);
+    });
   } else {
     reactiveRouteKeyInfo.routeKey = reactiveRouteKeyInfo.routeKey.map(function (key, index) {
-      if (depth !== index) {
-        return key;
-      }
-
       var forceKeyRemoved = getForceKeyRemoved(key);
       return "".concat(forceRouteKey[index], "_").concat(forceKeyRemoved);
     });

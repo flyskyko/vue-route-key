@@ -20,15 +20,12 @@ export function incrForceRouteKey(silent = false, depth) {
     }
 
     if (silent) {
-        const key = reactiveRouteKeyInfo.routeKey[depth];
-        const forceKeyRemoved = getForceKeyRemoved(key);
-        reactiveRouteKeyInfo.routeKey[depth] = `${forceRouteKey[depth]}_${forceKeyRemoved}`;
+        reactiveRouteKeyInfo.routeKey.forEach((key, index) => {
+            const forceKeyRemoved = getForceKeyRemoved(key);
+            reactiveRouteKeyInfo.routeKey[index] = `${forceRouteKey[index]}_${forceKeyRemoved}`;
+        });
     } else {
         reactiveRouteKeyInfo.routeKey = reactiveRouteKeyInfo.routeKey.map((key, index) => {
-            if (depth !== index) {
-                return key;
-            }
-
             const forceKeyRemoved = getForceKeyRemoved(key);
             return `${forceRouteKey[index]}_${forceKeyRemoved}`;
         });
