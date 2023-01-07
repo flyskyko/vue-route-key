@@ -23,7 +23,7 @@
   },
   "devDependencies": {
     "@vue/cli-plugin-babel": "^4.4.6",
-    "@vue/cli-service": "^4.4.6",
+    "@vue/cli-service": "^5.0.8",
     "core-js": "^3.10.1",
     "vue": "^2.6.12",
     "vue-router": "^3.5.1",
